@@ -1,10 +1,7 @@
-import { Metadata } from "next";
-import Link from "next/link";
+'use client';
 
-export const metadata: Metadata = {
-  title: "Dashboard | OSR System",
-  description: "View and manage your on-site support requests",
-};
+import { useState } from "react";
+import Link from "next/link";
 
 // Dummy data for support requests
 const requests = [
@@ -77,6 +74,22 @@ function getPriorityColor(priority: string) {
 }
 
 export default function DashboardPage() {
+  const [activeFilter, setActiveFilter] = useState<string>('all');
+
+  // Filter requests based on active filter
+  const filteredRequests = requests.filter(request => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'open') return request.status === 'Open';
+    if (activeFilter === 'in-progress') return request.status === 'In Progress';
+    if (activeFilter === 'resolved') return request.status === 'Resolved';
+    return true;
+  });
+
+  // Calculate counts for dashboard cards
+  const totalRequests = requests.length;
+  const openRequests = requests.filter(r => r.status === 'Open').length;
+  const inProgressRequests = requests.filter(r => r.status === 'In Progress').length;
+  const resolvedRequests = requests.filter(r => r.status === 'Resolved').length;
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container mx-auto px-4">
@@ -92,10 +105,47 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <DashboardCard title="Total Requests" value="4" color="bg-blue-50 border-blue-200" />
-            <DashboardCard title="Open" value="2" color="bg-yellow-50 border-yellow-200" />
-            <DashboardCard title="In Progress" value="1" color="bg-purple-50 border-purple-200" />
-            <DashboardCard title="Resolved" value="1" color="bg-green-50 border-green-200" />
+            <DashboardCard 
+              title="Total Requests" 
+              value={totalRequests.toString()} 
+              color="bg-blue-50 border-blue-200" 
+              isActive={activeFilter === 'all'}
+              onClick={() => setActiveFilter('all')}
+            />
+            <DashboardCard 
+              title="Open" 
+              value={openRequests.toString()} 
+              color="bg-yellow-50 border-yellow-200" 
+              isActive={activeFilter === 'open'}
+              onClick={() => setActiveFilter('open')}
+            />
+            <DashboardCard 
+              title="In Progress" 
+              value={inProgressRequests.toString()} 
+              color="bg-purple-50 border-purple-200" 
+              isActive={activeFilter === 'in-progress'}
+              onClick={() => setActiveFilter('in-progress')}
+            />
+            <DashboardCard 
+              title="Resolved" 
+              value={resolvedRequests.toString()} 
+              color="bg-green-50 border-green-200" 
+              isActive={activeFilter === 'resolved'}
+              onClick={() => setActiveFilter('resolved')}
+            />
+          </div>
+
+          {/* Filter Status Indicator */}
+          <div className="mb-4">
+            <p className="text-sm text-gray-600">
+              Showing: <span className="font-medium text-gray-800">
+                {activeFilter === 'all' ? 'All Requests' : 
+                 activeFilter === 'open' ? 'Open Requests' :
+                 activeFilter === 'in-progress' ? 'In Progress Requests' :
+                 'Resolved Requests'}
+              </span> 
+              ({filteredRequests.length} of {totalRequests} requests)
+            </p>
           </div>
 
           <div className="overflow-x-auto">
@@ -129,7 +179,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {requests.map((request) => (
+                {filteredRequests.map((request) => (
                   <tr key={request.id} className="hover:bg-gray-50">
                     <td className="py-3 px-4 text-sm text-gray-900">{request.id}</td>
                     <td className="py-3 px-4 text-sm text-gray-900">{request.subject}</td>
@@ -183,13 +233,22 @@ function DashboardCard({
   title,
   value,
   color,
+  isActive,
+  onClick,
 }: {
   title: string;
   value: string;
   color: string;
+  isActive: boolean;
+  onClick: () => void;
 }) {
   return (
-    <div className={`rounded-lg border p-4 ${color}`}>
+    <div 
+      className={`rounded-lg border p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${color} ${
+        isActive ? 'ring-2 ring-blue-500 shadow-md' : ''
+      }`}
+      onClick={onClick}
+    >
       <h2 className="text-gray-600 text-sm font-medium">{title}</h2>
       <p className="text-3xl font-bold mt-2">{value}</p>
     </div>
