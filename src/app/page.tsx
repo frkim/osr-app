@@ -5,7 +5,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="container mx-auto px-4 py-12">
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-blue-800 mb-4">OSR - On-site Support Request</h1>
+          <h1 className="text-4xl font-bold text-blue-800 mb-4">On-site Support Request</h1>
           <p className="text-xl text-gray-600">Streamline your on-site support process</p>
         </header>
 

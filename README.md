@@ -1,4 +1,4 @@
-# OSR - On-site Support Request System
+# On-site Support Request System
 
 A Next.js application for managing on-site support requests.
 

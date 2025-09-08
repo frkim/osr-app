@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OSR - On-site Support Request",
+  title: "On-site Support Request",
   description: "Application for managing on-site support requests",
 };
 
