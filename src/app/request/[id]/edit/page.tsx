@@ -1,7 +1,8 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import EditForm from './edit-form';
 
 // This would normally come from a database - for demo purposes only
 const getRequestDetails = (id: string) => {
@@ -40,12 +41,31 @@ const getRequestDetails = (id: string) => {
 };
 
 export default function EditRequestPage({ params }: { params: { id: string } }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  
   // Get request details
   const request = getRequestDetails(params.id);
 
   if (!request) {
     notFound();
   }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+    
+    // Simulate form submission
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Redirect or show success message
+    } catch (err) {
+      setError('Failed to update request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -58,28 +78,6 @@ export default function EditRequestPage({ params }: { params: { id: string } }) 
               </Link>
               <h1 className="text-2xl font-bold text-gray-800 mt-4">
                 Edit Request: {params.id}
-              </h1>
-            </div>
-          </div>
-
-          <EditForm request={request} id={params.id} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <Link href={`/request/${id}`} className="text-blue-600 hover:text-blue-800">
-                &larr; Back to Request Details
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-800 mt-4">
-                Edit Request: {id}
               </h1>
             </div>
           </div>
@@ -98,9 +96,8 @@ export default function EditRequestPage({ params }: { params: { id: string } }) 
                 </label>
                 <select
                   id="requestType"
-                  name="requestType"
                   defaultValue={request.type}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 >
                   <option value="hardware">Hardware Issue</option>
                   <option value="software">Software Issue</option>
@@ -108,16 +105,15 @@ export default function EditRequestPage({ params }: { params: { id: string } }) 
                   <option value="other">Other</option>
                 </select>
               </div>
-              
+
               <div>
                 <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
                   Priority
                 </label>
                 <select
                   id="priority"
-                  name="priority"
                   defaultValue={request.priority}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -126,38 +122,7 @@ export default function EditRequestPage({ params }: { params: { id: string } }) 
                 </select>
               </div>
             </div>
-            
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                defaultValue={request.status}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="Open">Open</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
-                <option value="Closed">Closed</option>
-              </select>
-            </div>
-            
-            <div>
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                Location
-              </label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                defaultValue={request.location}
-                placeholder="Building and room number"
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            
+
             <div>
               <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
                 Subject
@@ -165,42 +130,36 @@ export default function EditRequestPage({ params }: { params: { id: string } }) 
               <input
                 type="text"
                 id="subject"
-                name="subject"
                 defaultValue={request.subject}
-                placeholder="Brief description of the issue"
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
               />
             </div>
-            
+
+            <div>
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                Location
+              </label>
+              <input
+                type="text"
+                id="location"
+                defaultValue={request.location}
+                className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+              />
+            </div>
+
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                 Description
               </label>
               <textarea
                 id="description"
-                name="description"
                 rows={4}
                 defaultValue={request.description}
-                placeholder="Detailed description of the issue"
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              ></textarea>
-            </div>
-            
-            <div>
-              <label htmlFor="contactInfo" className="block text-sm font-medium text-gray-700 mb-1">
-                Contact Information
-              </label>
-              <input
-                type="text"
-                id="contactInfo"
-                name="contactInfo"
-                defaultValue={request.contactInfo}
-                placeholder="Phone number or email"
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
               />
             </div>
-            
-            <div className="flex justify-end gap-4">
+
+            <div className="flex justify-end space-x-3">
               <Link
                 href={`/request/${params.id}`}
                 className="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
