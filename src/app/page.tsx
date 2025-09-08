@@ -26,7 +26,7 @@ export default function Home() {
               </Link>
               <Link 
                 href="/dashboard" 
-                className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-6 rounded-md text-center transition-colors"
+                className="bg-green-100 hover:bg-green-200 text-green-800 font-medium py-3 px-6 rounded-md text-center transition-colors w-full sm:w-auto"
               >
                 View Dashboard
               </Link>
