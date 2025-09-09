@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 
 // Dummy data for support requests
 const requests = [
@@ -73,8 +74,32 @@ function getPriorityColor(priority: string) {
   }
 }
 
+type SortDirection = 'asc' | 'desc' | null;
+type SortField = 'id' | 'type' | 'status' | 'priority' | 'submittedDate';
+
 export default function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+
+  // Handle column sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Cycle through: asc -> desc -> null
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null);
+        setSortField(null);
+      } else {
+        setSortDirection('asc');
+      }
+    } else {
+      // New field, start with asc
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   // Filter requests based on active filter
   const filteredRequests = requests.filter(request => {
@@ -83,6 +108,39 @@ export default function DashboardPage() {
     if (activeFilter === 'in-progress') return request.status === 'In Progress';
     if (activeFilter === 'resolved') return request.status === 'Resolved';
     return true;
+  });
+
+  // Sort the filtered requests
+  const sortedRequests = [...filteredRequests].sort((a, b) => {
+    if (!sortField || !sortDirection) return 0;
+
+    let comparison = 0;
+
+    switch (sortField) {
+      case 'id':
+        comparison = a.id.localeCompare(b.id);
+        break;
+      case 'type':
+        comparison = a.type.localeCompare(b.type);
+        break;
+      case 'status':
+        comparison = a.status.localeCompare(b.status);
+        break;
+      case 'priority':
+        // Custom priority order for logical sorting
+        const priorityOrder = { 'Low': 1, 'Medium': 2, 'High': 3, 'Critical': 4 };
+        const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+        const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+        comparison = aPriority - bPriority;
+        break;
+      case 'submittedDate':
+        comparison = a.submittedDate.localeCompare(b.submittedDate);
+        break;
+      default:
+        return 0;
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
 
   // Calculate counts for dashboard cards
@@ -144,7 +202,7 @@ export default function DashboardPage() {
                  activeFilter === 'in-progress' ? 'In Progress Requests' :
                  'Resolved Requests'}
               </span> 
-              ({filteredRequests.length} of {totalRequests} requests)
+              ({sortedRequests.length} of {totalRequests} requests)
             </p>
           </div>
 
@@ -152,34 +210,54 @@ export default function DashboardPage() {
             <table className="min-w-full bg-white rounded-lg">
               <thead>
                 <tr className="bg-gray-100 border-b">
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
-                  </th>
+                  <SortableColumnHeader 
+                    title="ID"
+                    sortField="id"
+                    currentSortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  />
                   <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Subject
                   </th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
+                  <SortableColumnHeader 
+                    title="Type"
+                    sortField="type"
+                    currentSortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  />
                   <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Location
                   </th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Priority
-                  </th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date Submitted
-                  </th>
+                  <SortableColumnHeader 
+                    title="Status"
+                    sortField="status"
+                    currentSortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableColumnHeader 
+                    title="Priority"
+                    sortField="priority"
+                    currentSortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableColumnHeader 
+                    title="Date Submitted"
+                    sortField="submittedDate"
+                    currentSortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  />
                   <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredRequests.map((request) => (
+                {sortedRequests.map((request) => (
                   <tr key={request.id} className="hover:bg-gray-50">
                     <td className="py-3 px-4 text-sm text-gray-900">{request.id}</td>
                     <td className="py-3 px-4 text-sm text-gray-900">{request.subject}</td>
@@ -226,6 +304,49 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function SortableColumnHeader({
+  title,
+  sortField,
+  currentSortField,
+  sortDirection,
+  onSort,
+}: {
+  title: string;
+  sortField: SortField;
+  currentSortField: SortField | null;
+  sortDirection: SortDirection;
+  onSort: (field: SortField) => void;
+}) {
+  const isActive = currentSortField === sortField;
+  
+  return (
+    <th 
+      className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 select-none transition-colors"
+      onClick={() => onSort(sortField)}
+    >
+      <div className="flex items-center space-x-1">
+        <span>{title}</span>
+        <div className="flex flex-col">
+          <ChevronUpIcon 
+            className={`h-3 w-3 ${
+              isActive && sortDirection === 'asc' 
+                ? 'text-blue-600' 
+                : 'text-gray-300'
+            }`}
+          />
+          <ChevronDownIcon 
+            className={`h-3 w-3 -mt-1 ${
+              isActive && sortDirection === 'desc' 
+                ? 'text-blue-600' 
+                : 'text-gray-300'
+            }`}
+          />
+        </div>
+      </div>
+    </th>
   );
 }
 
